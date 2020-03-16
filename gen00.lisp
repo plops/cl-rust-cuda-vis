@@ -1,5 +1,37 @@
 (eval-when (:compile-toplevel :execute :load-toplevel)
-  (ql:quickload "cl-rust-generator"))
+  (ql:quickload "cl-rust-generator")
+  (ql:quickload "cl-cpp-generator2"))
+
+
+
+(defparameter *source-dir* #P"/home/martin/stage/cl-rust-cuda-vis/code/src/")
+
+(in-package :cl-cpp-generator2)
+
+(let ((fn (merge-pathnames (format nil "~a.cu" 'cuda_add)
+				*source-dir*)))
+  (write-source fn 
+	       `(do0
+		 "extern \"C\" __constant__ int my_constant = 314;"
+		 (defun sum (x y out count)
+		   (declare (type "const float*" x y)
+			    (type "float*" out)
+			    (type int count)
+			    (values "extern \"C\" __global__ void"))
+		   (for ((= "int i" (+ threadIdx.x
+					  (* blockIdx.x blockDim.x)))
+			 (< i count)
+			 (incf i))
+			(setf (aref out i)
+			      (* (aref x i)
+				 (aref y i)))))))
+
+  (sb-ext:run-program "/opt/cuda/bin/nvcc"
+		      (list "-g" "-Xcompiler=-march=native"
+			    "--compiler-bindir=/usr/x86_64-pc-linux-gnu/gcc-bin/8.4.0"
+			    "-Xcompiler=-ggdb" "-ldl"
+			    "-gencode=arch=compute_70,code=compute_70"
+			    (namestring fn))))
 
 (in-package :cl-rust-generator)
 
