@@ -117,7 +117,7 @@ chrono = \"*\"
 			       ContextFlags--SCHED_AUTO)
 			      device)))
 		 (ptx (? (CString--new
-			(include_str! (string "add.ptx")))))
+			(include_str! (string "cuda_add.ptx")))))
 		 (module (? (Module--load_from_string &ptx)))
 		 (stream (? (Stream--new StreamFlags--NON_BLOCKING None)))
 		 )

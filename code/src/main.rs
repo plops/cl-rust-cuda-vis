@@ -18,7 +18,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         ((ContextFlags::MAP_HOST) | (ContextFlags::SCHED_AUTO)),
         device,
     )?;
-    let ptx = CString::new(include_str!("add.ptx"))?;
+    let ptx = CString::new(include_str!("cuda_add.ptx"))?;
     let module = Module::load_from_string(&ptx)?;
     let stream = Stream::new(StreamFlags::NON_BLOCKING, None)?;
     {
