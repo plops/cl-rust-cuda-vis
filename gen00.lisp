@@ -8,7 +8,10 @@
 
 (in-package :cl-cpp-generator2)
 
-(let ((fn (merge-pathnames (format nil "~a.cu" 'cuda_add)
+(let* ((name 'cuda_add)
+      (fn (merge-pathnames (format nil "~a.cu" name)
+			   *source-dir*))
+      (fnp (merge-pathnames (format nil "~a.ptx" name)
 				*source-dir*)))
   (write-source fn 
 	       `(do0
@@ -26,12 +29,20 @@
 			      (* (aref x i)
 				 (aref y i)))))))
 
-  (sb-ext:run-program "/opt/cuda/bin/nvcc"
-		      (list "-g" "-Xcompiler=-march=native"
-			    "--compiler-bindir=/usr/x86_64-pc-linux-gnu/gcc-bin/8.4.0"
-			    "-Xcompiler=-ggdb" "-ldl"
-			    "-gencode=arch=compute_70,code=compute_70"
-			    (namestring fn))))
+  (let ((args (list "-g" "-Xcompiler=-march=native"
+			     "--compiler-bindir=/usr/x86_64-pc-linux-gnu/gcc-bin/8.4.0"
+			     "-Xcompiler=-ggdb" "-ldl"
+			     "-O2"
+			     "--compile"
+			     "-ptx"
+			     "-o"
+			     (namestring fnp)
+			     "-gencode=arch=compute_75,code=compute_75"
+			     (namestring fn))))
+    (format t "/opt/cuda/bin/nvcc ~{~a~^ ~}"
+	    args)
+   (sb-ext:run-program "/opt/cuda/bin/nvcc"
+		       args)))
 
 (in-package :cl-rust-generator)
 
